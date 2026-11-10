@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F8EFEC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Tone">
+<title>My Tone</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F8EFEC;--card:#FFF9F7;--line:#E8D3CF;--ink:#4A2A3C;--mute:#8A7078;--btn:#A8808C;--sel:#4A2A3C;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#241a1f;--card:#2f2227;--line:#4a373e;--ink:#f3e4e0;--mute:#b79ea6;--btn:#9a6f7c;--sel:#f3e4e0}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Tajawal',system-ui,sans-serif}
+#app{max-width:430px;height:100%;margin:0 auto;display:flex;flex-direction:column;padding:16px 20px 20px}
+.top{display:flex;align-items:center;gap:12px;min-height:36px}
+.back{background:none;border:0;color:var(--ink);font-size:24px;cursor:pointer;padding:4px 8px}
+.bars{flex:1;display:flex;gap:6px}.bars i{flex:1;height:3px;border-radius:3px;background:var(--line)}.bars i.on{background:var(--mute)}
+.cnt{font-size:13px;color:var(--mute)}
+main{flex:1;overflow-y:auto;padding:8px 0}
+h1{font-size:24px;text-align:center;margin:14px 0 6px}
+.logo{font-family:Georgia,serif;font-size:40px;text-align:center;margin:20px 0 4px}
+.sub{text-align:center;color:var(--mute);font-size:14px;margin:0 0 18px;line-height:1.6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{grid-template-columns:repeat(3,1fr);gap:10px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 8px;text-align:center;cursor:pointer;font:inherit;color:inherit;display:flex;flex-direction:column;align-items:center;gap:8px}
+.card.sel{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)}
+.sw{width:56px;height:34px;border-radius:50% 40% 50% 40%/60% 50% 60% 50%}
+.prod{flex-direction:row;justify-content:space-between;padding:16px;margin-bottom:12px;text-align:right}
+.bottle{width:26px;height:64px;border-radius:5px;background:linear-gradient(#222 22%,#E8C9A8 22%)}
+.bottle.c{width:14px;height:70px;border-radius:4px}
+.radio{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--mute)}
+.sel .radio{background:var(--sel);border-color:var(--sel)}
+.row{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.row .sw{width:52px;height:38px;flex:none}.row b{display:block;font-size:17px}.row span{font-size:13px;color:var(--mute)}
+.mine{border-color:var(--sel)}
+.btn{width:100%;border:0;border-radius:26px;background:var(--btn);color:#fff;font:700 16px 'Tajawal',sans-serif;padding:15px;margin-top:10px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line);margin-top:8px}
+.note{font-size:12px;color:var(--mute);text-align:center;margin-top:8px}
+.dots{display:flex;justify-content:center;gap:8px;margin:6px 0}.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--ink)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:20px;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ---- البيانات الثابتة (بيانات تجريبية: استبدليها ببيانات الدرجات الحقيقية) ----
+const BRANDS=["NARS","Too Faced","Hourglass","KOSAS"];
+const BCOL={"NARS":"#EBCBA8","Too Faced":"#F2C4CE","Hourglass":"#B98462","KOSAS":"#D5CBEA"};
+const TONES=["C1","C2","C3","M1","M2","M3","W1","W2","W3"];
+const TCOL=["#F3D9C2","#EFCDB0","#E8BE9C","#E6BB98","#DDAA82","#D09A70","#D8A57C","#C58D63","#B27850"];
+const NAMES={
+"NARS":["Siberia","Mont Blanc","Fiji","Deauville","Gobi","Barcelona","Cadiz","Stromboli","Macao"],
+"Too Faced":["Porcelain","Swan","Almond","Nude","Warm Beige","Honey","Tan","Caramel","Chestnut"],
+"Hourglass":["Fair","Ivory","Shell","Beige","Natural","Sand","Golden","Amber","Cocoa"],
+"KOSAS":["Light","Pearl","Vanilla","Soft Beige","Medium","Warm Sand","Honey Tan","Deep Amber","Deep"]};
+const PRODS=[{id:"foundation",ar:"كريم أساس",en:"Foundation"},{id:"concealer",ar:"كونسيلر",en:"Concealer",c:1}];
+
+// ---- الحالة ----
+let S={step:1,brand:null,prod:null,tone:null};
+const $=s=>document.querySelector(s);
+const app=$("#app");
+
+function topBar(){
+  if(S.step==1)return '<div class="top"></div>';
+  return `<div class="top"><button class="back" onclick="go(${S.step-1})" aria-label="رجوع">›</button><div class="bars">${[1,2,3,4].map(i=>`<i class="${i<=S.step?'on':''}"></i>`).join("")}</div><span class="cnt">${S.step} / 4</span></div>`;
+}
+function dots(){return `<div class="dots">${[1,2,3,4].map(i=>`<i class="${i==S.step?'on':''}"></i>`).join("")}</div>`}
+function go(n){S.step=n;render()}
+function pick(k,v){S[k]=v;render()}
+
+// ---- منطق المطابقة (Matching Logic) ----
+function match(){
+  const i=TONES.indexOf(S.tone);
+  return BRANDS.filter(b=>b!==S.brand).map(b=>({brand:b,name:NAMES[b][i],col:TCOL[i]}));
+}
+
+function render(){
+  let h=topBar(),m="",btn="";
+  if(S.step==1){
+    m=`<div class="logo">My Tone</div><p class="sub">Find your perfect shade,<br>across your favorite brands.</p><h1>اختر الشركة</h1><div class="grid">${BRANDS.map(b=>`<button class="card ${S.brand==b?'sel':''}" onclick="pick('brand','${b}')"><div class="sw" style="background:${BCOL[b]}"></div><b>${b}</b></button>`).join("")}</div>`;
+    btn=`<button class="btn" ${S.brand?'':'disabled'} onclick="go(2)">التالي ←</button>`;
+  }else if(S.step==2){
+    m=`<h1>اختر المنتج</h1><div style="height:12px"></div>${PRODS.map(p=>`<button class="card prod ${S.prod==p.id?'sel':''}" style="width:100%" onclick="pick('prod','${p.id}')"><div class="bottle ${p.c?'c':''}"></div><div style="flex:1;text-align:center"><b style="font-size:18px">${p.ar}</b><br><span style="color:var(--mute);font-size:13px">${p.en}</span></div><div class="radio"></div></button>`).join("")}`;
+    btn=`${dots()}<button class="btn" ${S.prod?'':'disabled'} onclick="go(3)">التالي ←</button>`;
+  }else if(S.step==3){
+    m=`<h1>اختر الدرجة</h1><p class="sub">اختر الدرجة التي تناسبك من درجات المنتج<br>(يمكنك اختيار درجة واحدة)</p><div class="grid grid3">${TONES.map((t,i)=>`<button class="card ${S.tone==t?'sel':''}" onclick="pick('tone','${t}')"><div class="sw" style="background:${TCOL[i]}"></div><b>${t}</b></button>`).join("")}</div>`;
+    btn=`${dots()}<button class="btn" ${S.tone?'':'disabled'} onclick="go(4)">التالي ←</button>`;
+  }else{
+    const r=match();
+    m=`<h1>درجات مشابهة لك</h1><p class="sub">هذه بعض الدرجات المشابهة من ماركات أخرى<br>قد تساعدك في العثور على اللون المناسب لك.</p>
+    <div class="row mine"><div class="sw" style="background:${TCOL[TONES.indexOf(S.tone)]}"></div><div><b>${S.tone}</b><span>${S.brand} · ${PRODS.find(p=>p.id==S.prod).ar}</span></div></div>
+    ${r.map(x=>`<div class="row"><div class="sw" style="background:${x.col}"></div><div><b>${x.name}</b><span>${x.brand}</span></div></div>`).join("")}
+    <p class="note">البيانات المعروضة تجريبية</p>`;
+    btn=`<button class="btn" onclick="save()">حفظ النتائج ⬇</button><button class="btn ghost" onclick="S={step:1,brand:null,prod:null,tone:null};render()">بحث جديد</button>`;
+  }
+  app.innerHTML=h+`<main>${m}</main>`+btn;
+}
+
+// ---- حفظ/مشاركة النتائج كنص ----
+async function save(){
+  const t=`My Tone\nدرجتي: ${S.tone} (${S.brand})\n`+match().map(x=>`${x.brand}: ${x.name}`).join("\n");
+  try{
+    if(navigator.share){await navigator.share({title:"My Tone",text:t});return}
+    await navigator.clipboard.writeText(t);toast("تم نسخ النتائج");
+  }catch(e){if(e&&e.name==="AbortError")return;manual(t)}
+}
+function manual(t){
+  const o=document.createElement("div");
+  o.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9";
+  o.innerHTML='<div style="background:var(--card);color:var(--ink);border-radius:18px;padding:18px;width:100%;max-width:380px"><b>نتائجك</b><textarea readonly style="width:100%;height:150px;margin:10px 0;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--ink)"></textarea><button class="btn" id="cp">نسخ</button><button class="btn ghost" id="cl">إغلاق</button></div>';
+  document.body.appendChild(o);
+  const ta=o.querySelector("textarea");ta.value=t;
+  o.querySelector("#cl").onclick=()=>o.remove();
+  o.querySelector("#cp").onclick=()=>{ta.focus();ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}toast(ok?"تم نسخ النتائج":"حدّدي النص وانسخيه يدويًا")};
+}
+function toast(s){const d=document.createElement("div");d.className="toast";d.textContent=s;document.body.appendChild(d);setTimeout(()=>d.remove(),2000)}
+
+// ---- PWA: manifest وأيقونة مضمّنة ----
+try{
+  const icon="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#A8808C"/><text x="96" y="118" font-size="72" text-anchor="middle" fill="#fff" font-family="Georgia">MT</text></svg>');
+  const mf={name:"My Tone",short_name:"My Tone",lang:"ar",dir:"rtl",display:"standalone",background_color:"#F8EFEC",theme_color:"#F8EFEC",start_url:".",icons:[{src:icon,sizes:"192x192",type:"image/svg+xml"}]};
+  const l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:"application/manifest+json"}));document.head.appendChild(l);
+  const a=document.createElement("link");a.rel="apple-touch-icon";a.href=icon;document.head.appendChild(a);
+}catch(e){}
+render();
+</script>
+</body>
+</html>
